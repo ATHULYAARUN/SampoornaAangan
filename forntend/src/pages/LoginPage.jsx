@@ -44,32 +44,30 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // Check if admin credentials (no role selection needed for admin)
-      if ((formData.email === ADMIN_CREDENTIALS.email || formData.email === ADMIN_CREDENTIALS.username) && 
-          formData.password === ADMIN_CREDENTIALS.password) {
-        
-        // Admin login
+      if (!formData.email || !formData.password || !formData.role) {
+        setError('Please fill in all fields including role selection.');
+        return;
+      }
+
+      // Admin login when role is Super Admin
+      if (formData.role === 'super-admin') {
         const result = await authService.loginAdmin(formData.email, formData.password);
         if (result.success) {
           navigate('/admin-dashboard');
         }
-        
-      } else if (formData.role && formData.email && formData.password) {
-        
-        // Regular user login
-        const result = await authService.loginUser(formData.email, formData.password, formData.role);
-        if (result.success) {
-          // Check if user needs to change password (first-time login)
-          if (result.data.needsPasswordChange || result.data.user.tempPassword) {
-            setCurrentUser(result.data.user);
-            setShowPasswordChange(true);
-          } else {
-            navigate(result.dashboard);
-          }
+        return;
+      }
+
+      // Regular user login
+      const result = await authService.loginUser(formData.email, formData.password, formData.role);
+      if (result.success) {
+        // Check if user needs to change password (first-time login)
+        if (result.data.needsPasswordChange || result.data.user.tempPassword) {
+          setCurrentUser(result.data.user);
+          setShowPasswordChange(true);
+        } else {
+          navigate(result.dashboard);
         }
-        
-      } else {
-        setError('Please fill in all fields including role selection.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -189,29 +187,27 @@ const LoginPage = () => {
                   </div>
                 )}
 
-                {/* Role Selection - Only show if not admin credentials */}
-                {!(formData.email === ADMIN_CREDENTIALS.email || formData.email === ADMIN_CREDENTIALS.username) && (
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">
-                      Select Your Role
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
-                      <select
-                        name="role"
-                        value={formData.role}
-                        onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-black"
-                        required={!(formData.email === ADMIN_CREDENTIALS.email || formData.email === ADMIN_CREDENTIALS.username)}
-                      >
-                        <option value="">Choose your role...</option>
-                        {userRoles.filter(role => role.id !== 'super-admin').map(role => (
-                          <option key={role.id} value={role.id}>{role.title}</option>
-                        ))}
-                      </select>
-                    </div>
+                {/* Role Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Select Your Role
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-black"
+                      required
+                    >
+                      <option value="">Choose your role...</option>
+                      {userRoles.map(role => (
+                        <option key={role.id} value={role.id}>{role.title}</option>
+                      ))}
+                    </select>
                   </div>
-                )}
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">

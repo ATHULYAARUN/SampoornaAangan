@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -24,14 +24,39 @@ import {
   Edit,
   Trash2,
   Eye,
-  LogOut
+  LogOut,
+  RefreshCw
 } from 'lucide-react';
 import UserManagement from '../components/UserManagement';
 import WorkerManagement from '../components/admin/WorkerManagement';
+import ExportButton from '../components/admin/ExportButton';
+import AddAnganwadiModal from '../components/admin/AddAnganwadiModal';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [anganwadiData, setAnganwadiData] = useState([]);
+  const [loadingCenters, setLoadingCenters] = useState(false);
+  const [refreshingCounts, setRefreshingCounts] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'Active' | 'Inactive'
+  const [filterPincode, setFilterPincode] = useState('');
+
+  const filteredCenters = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return anganwadiData.filter((c) => {
+      const matchesQuery =
+        !q ||
+        [c.name, c.location, c.anganwadiCode, c.pincode]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q));
+      const matchesStatus = filterStatus === 'all' || c.status === filterStatus;
+      const matchesPincode = !filterPincode || String(c.pincode || '').includes(filterPincode);
+      return matchesQuery && matchesStatus && matchesPincode;
+    });
+  }, [anganwadiData, searchQuery, filterStatus, filterPincode]);
 
   const handleLogout = () => {
     // Clear authentication data
@@ -47,8 +72,8 @@ const AdminDashboard = () => {
   const stats = [
     {
       title: 'Total Anganwadis',
-      value: '45',
-      change: '+3%',
+      value: '2',
+      change: '+100%',
       icon: Baby,
       color: 'blue',
       description: 'Active centers under monitoring'
@@ -138,19 +163,55 @@ const AdminDashboard = () => {
     }
   ];
 
-  const anganwadiData = [
-    {
-      id: 1,
-      name: 'Akkarakunnu Anganwadi Center',
-      location: 'Elangulam, Kottayam, Kerala',
-      workers: 2,
-      children: 25,
-      status: 'Active',
-      lastUpdate: '2024-01-15',
-      code: 'AW34',
-      pincode: '686522'
+
+  // Fetch centers from backend
+  useEffect(() => {
+    if (activeTab === 'anganwadis') {
+      setLoadingCenters(true);
+      fetch('http://localhost:5001/api/anganwadi-centers')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setAnganwadiData(data.data);
+            console.log('Fetched anganwadi data:', data.data);
+          } else {
+            console.error('Failed to fetch anganwadi data:', data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching anganwadi data:', error);
+        })
+        .finally(() => setLoadingCenters(false));
     }
-  ];
+  }, [activeTab]);
+
+  const handleAddCenter = (newCenter) => {
+    setAnganwadiData(prev => [newCenter, ...prev]);
+  };
+
+  const handleRefreshCounts = async () => {
+    setRefreshingCounts(true);
+    try {
+      const response = await fetch('http://localhost:5001/api/anganwadi-centers/refresh-counts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setAnganwadiData(data.data);
+        console.log('Counts refreshed successfully');
+      } else {
+        console.error('Failed to refresh counts:', data.message);
+      }
+    } catch (error) {
+      console.error('Error refreshing counts:', error);
+    } finally {
+      setRefreshingCounts(false);
+    }
+  };
 
   const renderOverview = () => (
     <div className="space-y-6">
@@ -229,26 +290,114 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       {/* Header with Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-black">Anganwadi Management</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-black">Anganwadi Management</h2>
+          <p className="text-sm text-gray-600 mt-1">Ward-based Anganwadi Centers - Pincode: 686522</p>
+        </div>
         <div className="flex items-center space-x-3 mt-4 sm:mt-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search anganwadis..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+          <button
+            type="button"
+            onClick={() => {
+              // Trigger search explicitly (filtering is already reactive)
+              setSearchQuery((q) => q.trim());
+            }}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 border border-primary-200"
+            title="Apply search"
+          >
+            <Search className="w-4 h-4" />
+            <span>Search</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen((v) => !v)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+          >
             <Filter className="w-4 h-4" />
             <span>Filter</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+          <button
+            onClick={handleRefreshCounts}
+            disabled={refreshingCounts}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Refresh worker/children counts from database"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshingCounts ? 'animate-spin' : ''}`} />
+            <span>{refreshingCounts ? 'Refreshing...' : 'Refresh Counts'}</span>
+          </button>
+          <button
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            onClick={() => setShowAddModal(true)}
+          >
             <Plus className="w-4 h-4" />
             <span>Add New</span>
           </button>
         </div>
       </div>
+
+      {/* Filters panel */}
+      {isFilterOpen && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Status</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg py-2 px-3"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Pincode</label>
+              <input
+                className="w-full border border-gray-300 rounded-lg py-2 px-3"
+                placeholder="e.g. 686522"
+                value={filterPincode}
+                onChange={(e) => setFilterPincode(e.target.value)}
+              />
+            </div>
+            <div className="flex items-end space-x-2">
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                onClick={() => {
+                  setFilterStatus('all');
+                  setFilterPincode('');
+                }}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                onClick={() => setIsFilterOpen(false)}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Modal */}
+      <AddAnganwadiModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={handleAddCenter}
+      />
 
       {/* Anganwadi Table */}
       <motion.div
@@ -257,74 +406,96 @@ const AdminDashboard = () => {
         className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
       >
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Anganwadi Center
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Workers
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Children
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {anganwadiData.map((center) => (
-                <tr key={center.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-black">{center.name}</div>
-                    <div className="text-sm text-gray-500">Last updated: {center.lastUpdate}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm text-black">{center.location}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
-                    {center.workers}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
-                    {center.children}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      center.status === 'Active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {center.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-primary-600 hover:text-primary-900">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="text-gray-600 hover:text-gray-900">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+          {loadingCenters ? (
+            <div className="p-8 text-center text-gray-500">Loading...</div>
+          ) : (
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Anganwadi Center
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Pincode
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Workers
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Children
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCenters.map((center) => (
+                  <tr key={center._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-black">{center.name}</div>
+                      <div className="text-sm text-gray-500">Last updated: {center.updatedAt ? new Date(center.updatedAt).toLocaleDateString() : ''}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {center.anganwadiCode}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <MapPin className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-black">{center.location}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-black">{center.pincode}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm font-medium text-black">{center.workersCount}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Baby className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm font-medium text-black">{center.childrenCount}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        center.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {center.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button className="text-primary-600 hover:text-primary-900" title="View Details">
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button className="text-gray-600 hover:text-gray-900" title="Edit">
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button className="text-red-600 hover:text-red-900" title="Delete">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </motion.div>
     </div>
@@ -559,12 +730,15 @@ const AdminDashboard = () => {
               <h1 className="text-xl font-bold text-black">Admin Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Export Button */}
+              <ExportButton />
+
               {/* Notifications */}
               <button className="relative p-2 text-gray-600 hover:text-black transition-colors duration-200">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
-              
+
               {/* Logout Button */}
               <motion.button
                 onClick={handleLogout}

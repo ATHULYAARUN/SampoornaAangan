@@ -489,22 +489,48 @@ const exportUsers = async (req, res) => {
 // Helper function to convert data to CSV
 const convertToCSV = (data) => {
   if (!data.length) return '';
-  
-  const headers = ['Name', 'Email', 'Phone', 'Role', 'District', 'Created At'];
+
+  const headers = [
+    'Name',
+    'Email',
+    'Phone',
+    'Role',
+    'District',
+    'Block',
+    'Village',
+    'Anganwadi Center',
+    'Status',
+    'Verified',
+    'Created At',
+    'Last Login'
+  ];
   const csvRows = [headers.join(',')];
-  
+
   data.forEach(user => {
     const row = [
-      user.name,
-      user.email,
+      user.name || '',
+      user.email || '',
       user.phone || '',
-      user.role,
+      user.role || '',
       user.address?.district || '',
-      user.createdAt?.toISOString() || '',
+      user.address?.block || '',
+      user.address?.village || '',
+      user.roleSpecificData?.anganwadiCenter?.name || '',
+      user.isActive ? 'Active' : 'Inactive',
+      user.isVerified ? 'Verified' : 'Unverified',
+      user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '',
+      user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'
     ];
-    csvRows.push(row.join(','));
+    // Escape commas in values
+    const escapedRow = row.map(value => {
+      if (typeof value === 'string' && value.includes(',')) {
+        return `"${value}"`;
+      }
+      return value;
+    });
+    csvRows.push(escapedRow.join(','));
   });
-  
+
   return csvRows.join('\n');
 };
 
