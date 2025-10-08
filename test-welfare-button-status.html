@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welfare Benefits - Button Status Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .scheme-card { border: 1px solid #ddd; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .view-details { background: #7c3aed; color: white; }
+        .approval-pending { background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; cursor: not-allowed; }
+        .approved { background: #d1fae5; color: #065f46; border: 1px solid #10b981; cursor: not-allowed; }
+        .enrolled { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; cursor: not-allowed; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .yellow-dot { background: #fbbf24; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Welfare Benefits - Button Status Demo</h1>
+    <p>This demonstrates how the button changes after a parent applies for a scheme:</p>
+
+    <div class="scheme-card">
+        <h3>Balak Vikas Yojana - Before Application</h3>
+        <p>Comprehensive development scheme for male children</p>
+        <p><strong>Benefits:</strong> ₹1,500 per month</p>
+        <button class="button view-details">✓ View Details</button>
+        <button class="button" style="background: #f3f4f6; color: #6b7280;">📁 Download</button>
+    </div>
+
+    <div class="scheme-card">
+        <h3>Balak Vikas Yojana - After Application</h3>
+        <p>Comprehensive development scheme for male children</p>
+        <p><strong>Benefits:</strong> ₹1,500 per month</p>
+        <button class="button approval-pending">
+            <span class="status-dot yellow-dot pulse"></span>
+            Approval Pending
+        </button>
+        <button class="button" style="background: #f3f4f6; color: #6b7280;">📁 Download</button>
+        <p style="color: #92400e; font-size: 12px; margin-top: 10px;">
+            📋 Status Badge: <span style="background: #fef3c7; padding: 4px 8px; border-radius: 12px; border: 1px solid #fbbf24;">PENDING</span>
+        </p>
+    </div>
+
+    <div class="scheme-card">
+        <h3>Different Status Examples:</h3>
+        
+        <div style="margin: 10px 0;">
+            <button class="button approval-pending">
+                <span class="status-dot yellow-dot pulse"></span>
+                Approval Pending
+            </button>
+            <span style="color: #92400e;">← After application submitted</span>
+        </div>
+
+        <div style="margin: 10px 0;">
+            <button class="button approved">🕒 Approved</button>
+            <span style="color: #065f46;">← After approval by authorities</span>
+        </div>
+
+        <div style="margin: 10px 0;">
+            <button class="button enrolled">✅ Enrolled</button>
+            <span style="color: #1e40af;">← Final enrollment status</span>
+        </div>
+    </div>
+
+    <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <h4>🔄 How It Works:</h4>
+        <ol>
+            <li><strong>Initial State:</strong> Button shows "View Details" - Parent can view scheme information and apply</li>
+            <li><strong>After Application:</strong> Button changes to "Approval Pending" with animated pulse dot</li>
+            <li><strong>After Approval:</strong> Button shows "Approved" - Parent knows application was accepted</li>
+            <li><strong>Final State:</strong> Button shows "Enrolled" - Child is officially enrolled in the scheme</li>
+        </ol>
+        <p><strong>Benefits:</strong> Clear visual feedback, prevents duplicate applications, shows progress status</p>
+    </div>
+
+    <script>
+        console.log('✅ Welfare Benefits Button Status Demo Ready');
+        console.log('🔄 Button states: View Details → Approval Pending → Approved → Enrolled');
+    </script>
+</body>
+</html>

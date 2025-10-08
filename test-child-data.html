@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Child Data Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .status.pending {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .data-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Child Data Fix</h1>
+        <p>Testing if children data now includes dateOfBirth, bloodGroup, and enrollmentDate.</p>
+        
+        <div>
+            <button onclick="testWithFirebaseLogin()">🔥 Test with Firebase Login</button>
+            <button onclick="testAPIDirectly()">🔗 Test API Directly</button>
+        </div>
+
+        <div id="status" class="status pending">Ready to test...</div>
+        
+        <div class="data-section">
+            <h3>📊 Test Results</h3>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Firebase configuration (simplified for testing)
+        const firebaseConfig = {
+            apiKey: "demo",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo"
+        };
+
+        let authToken = null;
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log('Firebase initialized');
+        } catch (error) {
+            console.log('Firebase init error:', error);
+        }
+
+        async function testWithFirebaseLogin() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.textContent = 'Testing with Firebase login...';
+            statusEl.className = 'status pending';
+            
+            try {
+                // Test parent credentials
+                const testCredentials = {
+                    email: 'lekha.parent@test.com',
+                    password: 'testparent123'
+                };
+
+                statusEl.textContent = 'Authenticating with backend...';
+                
+                // Call backend auth API directly
+                const authResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: testCredentials.email,
+                        password: testCredentials.password,
+                        role: 'parent'
+                    })
+                });
+
+                const authData = await authResponse.json();
+                
+                if (!authResponse.ok) {
+                    throw new Error(`Auth failed: ${authData.message}`);
+                }
+
+                authToken = authData.token;
+                statusEl.textContent = 'Authentication successful! Fetching children data...';
+
+                // Now fetch parent stats with the token
+                const statsResponse = await fetch('/api/registration/parent/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const statsData = await statsResponse.json();
+                
+                if (!statsResponse.ok) {
+                    throw new Error(`Stats API failed: ${statsData.message}`);
+                }
+
+                statusEl.textContent = '✅ Data retrieved successfully!';
+                statusEl.className = 'status success';
+
+                // Display results
+                displayResults(statsData, resultsEl);
+
+            } catch (error) {
+                statusEl.textContent = `❌ Error: ${error.message}`;
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `<pre style="color: red;">Error details: ${error.stack}</pre>`;
+            }
+        }
+
+        async function testAPIDirectly() {
+            const statusEl = document.getElementById('status');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.textContent = 'Testing API directly...';
+            statusEl.className = 'status pending';
+            
+            try {
+                // First get a valid token
+                const authResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'lekha.parent@test.com',
+                        password: 'testparent123',
+                        role: 'parent'
+                    })
+                });
+
+                const authData = await authResponse.json();
+                if (!authResponse.ok) {
+                    throw new Error(`Auth failed: ${authData.message}`);
+                }
+
+                // Test the fixed API
+                const response = await fetch('/api/registration/parent/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authData.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${data.message}`);
+                }
+
+                statusEl.textContent = '✅ API test successful!';
+                statusEl.className = 'status success';
+                
+                displayResults(data, resultsEl);
+
+            } catch (error) {
+                statusEl.textContent = `❌ API Error: ${error.message}`;
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
+            }
+        }
+
+        function displayResults(data, resultsEl) {
+            let html = `<h4>👶 Children Data Analysis</h4>`;
+            
+            if (data.success && data.data && data.data.children) {
+                const children = data.data.children;
+                html += `<p><strong>Total Children Found:</strong> ${children.length}</p>`;
+                
+                children.forEach((child, index) => {
+                    html += `
+                    <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                        <h5>Child ${index + 1}: ${child.name}</h5>
+                        <p><strong>🗓️ Date of Birth:</strong> ${child.dateOfBirth || '❌ MISSING'}</p>
+                        <p><strong>🩸 Blood Group:</strong> ${child.bloodGroup || '❌ MISSING'}</p>
+                        <p><strong>📅 Enrollment Date:</strong> ${child.enrollmentDate || '❌ MISSING'}</p>
+                        <p><strong>🏥 Health Status:</strong> ${child.healthStatus}</p>
+                        <p><strong>🏢 Anganwadi Center:</strong> ${child.anganwadiCenter}</p>
+                    </div>`;
+                });
+
+                // Check if the fix worked
+                const hasDateOfBirth = children.some(child => child.dateOfBirth);
+                const hasBloodGroup = children.some(child => child.bloodGroup);
+                const hasEnrollmentDate = children.some(child => child.enrollmentDate);
+
+                html += `
+                <div style="background-color: #e3f2fd; padding: 15px; border-radius: 4px; margin: 15px 0;">
+                    <h4>🔍 Fix Status Check</h4>
+                    <p>✅ Date of Birth: ${hasDateOfBirth ? 'WORKING' : '❌ STILL MISSING'}</p>
+                    <p>✅ Blood Group: ${hasBloodGroup ? 'WORKING' : '❌ STILL MISSING'}</p>
+                    <p>✅ Enrollment Date: ${hasEnrollmentDate ? 'WORKING' : '❌ STILL MISSING'}</p>
+                </div>`;
+
+            } else {
+                html += `<p style="color: red;">No children data found or invalid response structure.</p>`;
+            }
+
+            // Show raw data for debugging
+            html += `
+            <details style="margin-top: 20px;">
+                <summary>🔍 Raw API Response (for debugging)</summary>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            </details>`;
+
+            resultsEl.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

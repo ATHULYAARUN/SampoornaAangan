@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Child Age Validation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success {
+            background-color: #f0f9ff;
+            border-color: #0ea5e9;
+        }
+        .warning {
+            background-color: #fffbeb;
+            border-color: #f59e0b;
+        }
+        .error {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+        }
+        .info {
+            background-color: #f8fafc;
+            border-color: #64748b;
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #4b5563;
+            margin-bottom: 15px;
+        }
+        .test-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .test-link:hover {
+            background: #2563eb;
+        }
+        .code {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.implemented {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .status.testing {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+        .age-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .age-card {
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .age-valid {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #15803d;
+        }
+        .age-invalid {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+        ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👶 Child Age Validation - Implementation Complete</h1>
+        
+        <div class="test-section success">
+            <h2>✅ Implementation Status</h2>
+            <div class="status implemented">
+                Complete: Age validation (3-6 years) for Anganwadi child registration
+            </div>
+            
+            <h3>What's Been Implemented:</h3>
+            <ul>
+                <li><strong>Frontend Validation:</strong> Real-time age calculation and validation in ChildRegistrationForm.jsx</li>
+                <li><strong>Backend Validation:</strong> Server-side age validation in registration API</li>
+                <li><strong>Visual Feedback:</strong> Real-time age display with eligibility indicators</li>
+                <li><strong>User Experience:</strong> Clear error messages and guidance</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h2>🎯 Age Validation Rules</h2>
+            
+            <h3>Anganwadi Eligibility Criteria:</h3>
+            <div class="code">
+Minimum Age: 3 years (completed)
+Maximum Age: 6 years (not yet completed 7th birthday)
+Target Group: Pre-school children
+Purpose: Early childhood development and education
+            </div>
+            
+            <h3>Validation Examples:</h3>
+            <div class="age-examples">
+                <div class="age-card age-invalid">
+                    <h4>❌ Too Young</h4>
+                    <p><strong>Age:</strong> 2 years 11 months</p>
+                    <p><strong>Status:</strong> Not eligible</p>
+                    <p><strong>Message:</strong> "Child must be at least 3 years old for Anganwadi registration"</p>
+                </div>
+                
+                <div class="age-card age-valid">
+                    <h4>✅ Perfect Age</h4>
+                    <p><strong>Age:</strong> 4 years 6 months</p>
+                    <p><strong>Status:</strong> Eligible</p>
+                    <p><strong>Message:</strong> "✓ Eligible for Anganwadi"</p>
+                </div>
+                
+                <div class="age-card age-invalid">
+                    <h4>❌ Too Old</h4>
+                    <p><strong>Age:</strong> 7 years 2 months</p>
+                    <p><strong>Status:</strong> Not eligible</p>
+                    <p><strong>Message:</strong> "Child must be 6 years old or younger for Anganwadi registration"</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section warning">
+            <h2>🧪 How to Test</h2>
+            
+            <h3>Frontend Testing:</h3>
+            <ol>
+                <li>Visit the Anganwadi Worker Dashboard: <a href="http://localhost:5174/aww-dashboard" class="test-link">AWW Dashboard</a></li>
+                <li>Click on "Register Child" in the Registration section</li>
+                <li>Fill in the child's name</li>
+                <li>Enter different dates of birth to test validation:
+                    <ul>
+                        <li>Too young: Date making child 2 years old</li>
+                        <li>Perfect age: Date making child 4-5 years old</li>
+                        <li>Too old: Date making child 7+ years old</li>
+                    </ul>
+                </li>
+                <li>Observe real-time age calculation and eligibility indicators</li>
+                <li>Try to submit the form with invalid ages</li>
+            </ol>
+            
+            <h3>Backend Testing:</h3>
+            <div class="code">
+// Test API directly
+POST /api/registration/child
+{
+  "name": "Test Child",
+  "dateOfBirth": "2021-01-01", // Too young - should fail
+  "gender": "male",
+  "parentName": "Test Parent",
+  "parentPhone": "9876543210",
+  "relationToChild": "father",
+  "anganwadiCenter": "Test Center",
+  "address": { ... }
+}
+            </div>
+        </div>
+
+        <div class="test-section info">
+            <h2>🔧 Technical Implementation</h2>
+            
+            <h3>Frontend Changes (ChildRegistrationForm.jsx):</h3>
+            <div class="code">
+// Age calculation function
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return null;
+  const dob = new Date(dateOfBirth);
+  const today = new Date();
+  const ageInYears = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+  // Returns formatted age string
+};
+
+// Enhanced validation in validateForm()
+if (formData.dateOfBirth) {
+  const ageInYears = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+  
+  if (ageInYears < 3) {
+    newErrors.dateOfBirth = 'Child must be at least 3 years old...';
+  } else if (ageInYears > 6) {
+    newErrors.dateOfBirth = 'Child must be 6 years old or younger...';
+  }
+}
+            </div>
+            
+            <h3>Backend Changes (registration.js):</h3>
+            <div class="code">
+// Age validation in registerChild function
+const dob = new Date(dateOfBirth);
+const today = new Date();
+const ageInYears = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+
+if (ageInYears < 3) {
+  return res.status(400).json({
+    success: false,
+    message: 'Child must be at least 3 years old for Anganwadi registration'
+  });
+}
+
+if (ageInYears > 6) {
+  return res.status(400).json({
+    success: false,
+    message: 'Child must be 6 years old or younger for Anganwadi registration'
+  });
+}
+            </div>
+        </div>
+
+        <div class="test-section success">
+            <h2>🎨 User Experience Features</h2>
+            
+            <h3>Real-time Feedback:</h3>
+            <ul>
+                <li>📅 <strong>Age Display:</strong> Shows "X years Y months old" as user types date</li>
+                <li>✅ <strong>Eligibility Badge:</strong> Green "✓ Eligible for Anganwadi" for valid ages</li>
+                <li>❌ <strong>Warning Badge:</strong> Red "✗ Not eligible" for invalid ages</li>
+                <li>💡 <strong>Helper Text:</strong> "Anganwadi services are for children aged 3-6 years"</li>
+                <li>🚫 <strong>Date Restrictions:</strong> max date set to today (prevents future dates)</li>
+            </ul>
+            
+            <h3>Error Handling:</h3>
+            <ul>
+                <li>Clear, user-friendly error messages</li>
+                <li>Prevents form submission with invalid ages</li>
+                <li>Real-time validation (no need to submit to see errors)</li>
+                <li>Consistent validation between frontend and backend</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h2>📋 Business Logic</h2>
+            
+            <h3>Why 3-6 Years?</h3>
+            <ul>
+                <li><strong>3 Years Minimum:</strong> Children develop sufficient independence for group activities</li>
+                <li><strong>6 Years Maximum:</strong> Children typically start formal primary education at age 6-7</li>
+                <li><strong>Pre-school Focus:</strong> Anganwadi centers provide early childhood development</li>
+                <li><strong>Government Guidelines:</strong> Follows ICDS (Integrated Child Development Services) norms</li>
+            </ul>
+            
+            <h3>Edge Cases Handled:</h3>
+            <ul>
+                <li>Children exactly 3 years old → Eligible</li>
+                <li>Children exactly 6 years old → Eligible</li>
+                <li>Children who turn 7 during the year → May need case-by-case evaluation</li>
+                <li>Future dates → Prevented with max date validation</li>
+            </ul>
+        </div>
+
+        <div class="test-section success">
+            <h2>🎯 Ready for Testing</h2>
+            <div class="status testing">
+                All validation features implemented and ready for testing
+            </div>
+            
+            <h3>Test the Implementation:</h3>
+            <a href="http://localhost:5174/aww-dashboard" class="test-link">Go to AWW Dashboard</a>
+            <a href="http://localhost:5174/login" class="test-link">Login as AWW</a>
+            
+            <h3>What to Expect:</h3>
+            <ul>
+                <li>Real-time age calculation when entering date of birth</li>
+                <li>Visual eligibility indicators (green for eligible, red for not eligible)</li>
+                <li>Form validation preventing submission of invalid ages</li>
+                <li>Clear error messages explaining the age requirements</li>
+                <li>Consistent validation on both frontend and backend</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('👶 Child Age Validation Test Page Loaded');
+            console.log('Age Range: 3-6 years for Anganwadi registration');
+            console.log('Frontend: Real-time validation with visual feedback');
+            console.log('Backend: Server-side validation for data integrity');
+        });
+    </script>
+</body>
+</html>

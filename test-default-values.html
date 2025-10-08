@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test System Settings Default Values</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .status {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 8px 0;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .values {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏛️ System Settings Default Values Test</h1>
+        
+        <div class="test-section">
+            <h3>Test: Verify Default Values for Elikkulam Panchayat</h3>
+            <p>Expected Values:</p>
+            <ul>
+                <li><strong>Panchayat Name:</strong> Elikkulam</li>
+                <li><strong>District:</strong> Kottayam</li>
+                <li><strong>State:</strong> Kerala</li>
+            </ul>
+            <button onclick="testDefaultValues()">Test Default Values</button>
+            <div id="testResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test: Admin Login & Settings Access</h3>
+            <button onclick="testAdminAccess()">Test Admin Login & Settings</button>
+            <div id="adminResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        async function testDefaultValues() {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Testing default values...</p>';
+
+            try {
+                // First login as admin
+                const loginResponse = await fetch(`${API_BASE}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error('Failed to login as admin');
+                }
+
+                const loginData = await loginResponse.json();
+                const token = loginData.token;
+
+                // Get system settings
+                const settingsResponse = await fetch(`${API_BASE}/admin/settings`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!settingsResponse.ok) {
+                    throw new Error('Failed to fetch settings');
+                }
+
+                const settings = await settingsResponse.json();
+                const general = settings.general;
+
+                // Check default values
+                const panchayatMatch = general.panchayatName === 'Elikkulam';
+                const districtMatch = general.district === 'Kottayam';
+                const stateMatch = general.state === 'Kerala';
+
+                const allMatch = panchayatMatch && districtMatch && stateMatch;
+
+                resultDiv.className = `result ${allMatch ? 'success' : 'error'}`;
+                resultDiv.innerHTML = `
+                    <h4>${allMatch ? '✅ Test Passed!' : '❌ Test Failed!'}</h4>
+                    <div class="values">
+                        <strong>Current Values:</strong><br>
+                        Panchayat Name: "${general.panchayatName}" ${panchayatMatch ? '✅' : '❌'}<br>
+                        District: "${general.district}" ${districtMatch ? '✅' : '❌'}<br>
+                        State: "${general.state}" ${stateMatch ? '✅' : '❌'}<br>
+                        System Name: "${general.systemName}"<br>
+                        Primary Color: ${general.primaryColor}<br>
+                        Secondary Color: ${general.secondaryColor}
+                    </div>
+                    ${allMatch ? 
+                        '<p><strong>🎉 Success!</strong> All default values are correctly set for Elikkulam Panchayat, Kottayam District, Kerala State.</p>' : 
+                        '<p><strong>⚠️ Issue!</strong> Some default values do not match expected values.</p>'
+                    }
+                `;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h4>❌ Test Error</h4>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        async function testAdminAccess() {
+            const resultDiv = document.getElementById('adminResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Testing admin access...</p>';
+
+            try {
+                // Test admin login
+                const loginResponse = await fetch(`${API_BASE}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                const loginData = await loginResponse.json();
+
+                if (loginResponse.ok && loginData.token) {
+                    const token = loginData.token;
+
+                    // Test settings access
+                    const settingsResponse = await fetch(`${API_BASE}/admin/settings`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (settingsResponse.ok) {
+                        const settings = await settingsResponse.json();
+                        
+                        resultDiv.className = 'result success';
+                        resultDiv.innerHTML = `
+                            <h4>✅ Admin Access Successful!</h4>
+                            <div class="values">
+                                <strong>Admin Info:</strong><br>
+                                Name: ${loginData.admin.name}<br>
+                                Role: ${loginData.admin.role}<br>
+                                <br>
+                                <strong>Settings Sections Available:</strong><br>
+                                ${Object.keys(settings).join(', ')}
+                                <br><br>
+                                <strong>System Info:</strong><br>
+                                System Name: ${settings.general.systemName}<br>
+                                Panchayat: ${settings.general.panchayatName}<br>
+                                District: ${settings.general.district}<br>
+                                State: ${settings.general.state}
+                            </div>
+                            <p><strong>🔗 Direct Link:</strong> <a href="http://localhost:5173" target="_blank">Open Admin Dashboard</a></p>
+                        `;
+                    } else {
+                        throw new Error('Failed to access settings');
+                    }
+                } else {
+                    throw new Error(loginData.error || 'Login failed');
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h4>❌ Access Test Failed</h4>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Auto-run default values test on page load
+        window.onload = function() {
+            testDefaultValues();
+        };
+    </script>
+</body>
+</html>

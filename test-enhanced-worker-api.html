@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Enhanced Worker API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .status {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 8px 0;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.pending { background-color: #fff3cd; color: #856404; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .form-data {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .login-form {
+            display: grid;
+            gap: 15px;
+            max-width: 400px;
+            margin: 20px 0;
+        }
+        .login-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .worker-form {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            margin: 20px 0;
+        }
+        .worker-form input, .worker-form select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .file-input {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Enhanced Anganwadi Worker API Test</h1>
+        
+        <div class="test-section">
+            <div class="test-title">1. Backend Connection Test</div>
+            <div class="status pending" id="connectionStatus">Not tested</div>
+            <button onclick="testConnection()">Test Connection</button>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">2. Admin Login Test</div>
+            <div class="status pending" id="loginStatus">Not logged in</div>
+            <div class="login-form">
+                <input type="text" id="adminUsername" placeholder="Admin Username" value="admin">
+                <input type="password" id="adminPassword" placeholder="Admin Password" value="admin123">
+                <button onclick="adminLogin()">Login as Admin</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">3. Enhanced Worker Registration Test</div>
+            <div class="status pending" id="workerStatus">Ready to test</div>
+            <div class="worker-form">
+                <input type="text" id="workerName" placeholder="Worker Name" value="Test Anganwadi Worker">
+                <input type="email" id="workerEmail" placeholder="Email" value="testworker@example.com">
+                <select id="workerGender">
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                </select>
+                <input type="date" id="workerDOB" value="1995-06-15">
+                <input type="text" id="employeeId" placeholder="Employee ID" value="AW2024001">
+                <input type="text" id="qualification" placeholder="Qualification" value="Bachelor of Arts">
+                <input type="number" id="experience" placeholder="Years of Experience" value="3">
+                <input type="number" id="salary" placeholder="Monthly Salary" value="25000">
+                <input type="text" id="emergencyName" placeholder="Emergency Contact Name" value="Priya Sharma">
+                <input type="text" id="emergencyRelation" placeholder="Relationship" value="Sister">
+                <input type="tel" id="emergencyPhone" placeholder="Emergency Phone" value="9876543210">
+                <input type="file" id="workerPhoto" accept="image/*" class="file-input">
+            </div>
+            <button onclick="createEnhancedWorker()">Create Enhanced Worker</button>
+            <button onclick="testValidations()">Test Validations</button>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">4. File Upload Test</div>
+            <div class="status pending" id="uploadStatus">Not tested</div>
+            <button onclick="testFileUpload()">Test File Upload Only</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testConnection() {
+            const statusEl = document.getElementById('connectionStatus');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = '✅ Backend Connected';
+                    statusEl.className = 'status success';
+                    resultsEl.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 15px; border-radius: 8px;">
+                            <h3>✅ Backend Server Status</h3>
+                            <div class="form-data">${JSON.stringify(data, null, 2)}</div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Connection Failed';
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px;">
+                        <h3>❌ Connection Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function adminLogin() {
+            const statusEl = document.getElementById('loginStatus');
+            const resultsEl = document.getElementById('results');
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            statusEl.textContent = 'Logging in...';
+            statusEl.className = 'status pending';
+            
+            try {
+                const response = await fetch('/api/auth/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    statusEl.textContent = '✅ Admin Logged In';
+                    statusEl.className = 'status success';
+                    resultsEl.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 15px; border-radius: 8px;">
+                            <h3>✅ Admin Login Successful</h3>
+                            <p><strong>Token:</strong> ${data.token.substring(0, 50)}...</p>
+                            <p><strong>Admin:</strong> ${data.admin.name}</p>
+                            <p><strong>Role:</strong> ${data.admin.role}</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'Login failed');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Login Failed';
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px;">
+                        <h3>❌ Login Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function createEnhancedWorker() {
+            const statusEl = document.getElementById('workerStatus');
+            const resultsEl = document.getElementById('results');
+            
+            if (!authToken) {
+                alert('Please login as admin first!');
+                return;
+            }
+            
+            statusEl.textContent = 'Creating worker...';
+            statusEl.className = 'status pending';
+            
+            // Collect form data
+            const formData = new FormData();
+            formData.append('name', document.getElementById('workerName').value);
+            formData.append('email', document.getElementById('workerEmail').value);
+            formData.append('role', 'anganwadi-worker');
+            formData.append('gender', document.getElementById('workerGender').value);
+            formData.append('dateOfBirth', document.getElementById('workerDOB').value);
+            formData.append('employeeId', document.getElementById('employeeId').value);
+            formData.append('qualification', document.getElementById('qualification').value);
+            formData.append('experience', document.getElementById('experience').value);
+            formData.append('salary', document.getElementById('salary').value);
+            
+            // Emergency contact as JSON string
+            const emergencyContact = {
+                name: document.getElementById('emergencyName').value,
+                relationship: document.getElementById('emergencyRelation').value,
+                phone: document.getElementById('emergencyPhone').value
+            };
+            formData.append('emergencyContact', JSON.stringify(emergencyContact));
+            
+            // Add photo if selected
+            const photoFile = document.getElementById('workerPhoto').files[0];
+            if (photoFile) {
+                formData.append('photo', photoFile);
+            }
+            
+            try {
+                const response = await fetch('/api/admin/workers', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = '✅ Worker Created Successfully';
+                    statusEl.className = 'status success';
+                    resultsEl.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 15px; border-radius: 8px;">
+                            <h3>✅ Enhanced Worker Created Successfully!</h3>
+                            <p><strong>Worker ID:</strong> ${data.user._id}</p>
+                            <p><strong>Name:</strong> ${data.user.name}</p>
+                            <p><strong>Email:</strong> ${data.user.email}</p>
+                            <p><strong>Gender:</strong> ${data.user.gender}</p>
+                            <p><strong>Age:</strong> ${data.user.age || 'N/A'} years</p>
+                            <p><strong>Employee ID:</strong> ${data.user.employeeId}</p>
+                            <p><strong>Qualification:</strong> ${data.user.qualification}</p>
+                            <p><strong>Experience:</strong> ${data.user.experience} years</p>
+                            <p><strong>Salary:</strong> ₹${data.user.salary}</p>
+                            <p><strong>Photo:</strong> ${data.user.photoPath ? 'Uploaded ✅' : 'No photo'}</p>
+                            <p><strong>Emergency Contact:</strong> ${data.user.emergencyContact?.name} (${data.user.emergencyContact?.relationship})</p>
+                            ${data.emailSent ? '<p><strong>📧 Email Sent:</strong> ✅ Credentials emailed to worker</p>' : '<p><strong>📧 Email:</strong> ⚠️ Not sent (check email configuration)</p>'}
+                            <div class="form-data">${JSON.stringify(data, null, 2)}</div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || data.message || 'Failed to create worker');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Worker Creation Failed';
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px;">
+                        <h3>❌ Worker Creation Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testValidations() {
+            const resultsEl = document.getElementById('results');
+            
+            const validationTests = [
+                {
+                    name: 'Male Gender Test (Should Fail)',
+                    data: { gender: 'male', dateOfBirth: '1995-01-01' },
+                    shouldFail: true
+                },
+                {
+                    name: 'Under 18 Age Test (Should Fail)', 
+                    data: { gender: 'female', dateOfBirth: '2010-01-01' },
+                    shouldFail: true
+                },
+                {
+                    name: 'Valid Female Worker (Should Pass)',
+                    data: { gender: 'female', dateOfBirth: '1995-01-01' },
+                    shouldFail: false
+                }
+            ];
+            
+            let results = '<div style="background-color: #e3f2fd; padding: 15px; border-radius: 8px;">';
+            results += '<h3>🧪 Validation Test Results</h3>';
+            
+            for (const test of validationTests) {
+                const age = new Date().getFullYear() - new Date(test.data.dateOfBirth).getFullYear();
+                const genderValid = test.data.gender === 'female';
+                const ageValid = age >= 18;
+                
+                const isValid = genderValid && ageValid;
+                const testPassed = test.shouldFail ? !isValid : isValid;
+                
+                results += `
+                    <div style="margin: 10px 0; padding: 10px; border-radius: 4px; background-color: ${testPassed ? '#d4edda' : '#f8d7da'};">
+                        <strong>${testPassed ? '✅' : '❌'} ${test.name}</strong><br>
+                        Gender: ${test.data.gender} (Valid: ${genderValid})<br>
+                        Age: ${age} years (Valid: ${ageValid})<br>
+                        Expected: ${test.shouldFail ? 'Fail' : 'Pass'} | Result: ${testPassed ? 'Pass' : 'Fail'}
+                    </div>
+                `;
+            }
+            
+            results += '</div>';
+            resultsEl.innerHTML = results;
+        }
+
+        async function testFileUpload() {
+            const statusEl = document.getElementById('uploadStatus');
+            const resultsEl = document.getElementById('results');
+            
+            if (!authToken) {
+                alert('Please login as admin first!');
+                return;
+            }
+            
+            const photoFile = document.getElementById('workerPhoto').files[0];
+            if (!photoFile) {
+                alert('Please select a photo file first!');
+                return;
+            }
+            
+            statusEl.textContent = 'Testing file upload...';
+            statusEl.className = 'status pending';
+            
+            const formData = new FormData();
+            formData.append('photo', photoFile);
+            formData.append('name', 'Test Upload Worker');
+            formData.append('email', 'upload-test@example.com');
+            formData.append('role', 'anganwadi-worker');
+            formData.append('gender', 'female');
+            formData.append('dateOfBirth', '1990-01-01');
+            
+            try {
+                const response = await fetch('/api/admin/workers', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.user.photoPath) {
+                    statusEl.textContent = '✅ File Upload Successful';
+                    statusEl.className = 'status success';
+                    resultsEl.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 15px; border-radius: 8px;">
+                            <h3>✅ File Upload Test Successful!</h3>
+                            <p><strong>File:</strong> ${photoFile.name}</p>
+                            <p><strong>Size:</strong> ${(photoFile.size / 1024).toFixed(2)} KB</p>
+                            <p><strong>Type:</strong> ${photoFile.type}</p>
+                            <p><strong>Server Path:</strong> ${data.user.photoPath}</p>
+                            <p><strong>Access URL:</strong> <a href="/uploads/${data.user.photoPath.split('/').pop()}" target="_blank">View Photo</a></p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.error || 'File upload failed');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ File Upload Failed';
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 15px; border-radius: 8px;">
+                        <h3>❌ File Upload Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-test connection on page load
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html>

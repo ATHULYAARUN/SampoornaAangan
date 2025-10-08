@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Attendance Test - SampoornaAngan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .worker-section {
+            margin-bottom: 30px;
+        }
+
+        .worker-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .worker-card:hover {
+            border-color: #ff6b6b;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.1);
+        }
+
+        .worker-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .worker-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .worker-email {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .worker-center {
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .results h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .children-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .child-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .child-card:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .child-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .child-details {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .attendance-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-late {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-not-marked {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .attendance-controls {
+            margin-top: 10px;
+        }
+
+        .attendance-controls select,
+        .attendance-controls input {
+            margin: 3px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+
+        .log-error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .log-success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Worker Attendance Test</h1>
+            <p>Testing attendance system with real worker credentials</p>
+        </div>
+
+        <div class="content">
+            <!-- Worker Selection -->
+            <div class="worker-section">
+                <h2>Anganwadi Workers</h2>
+                
+                <div class="worker-card">
+                    <div class="worker-info">
+                        <div>
+                            <div class="worker-name">Athulya Arun</div>
+                            <div class="worker-email">athulyaanal@gmail.com</div>
+                        </div>
+                        <div class="worker-center">Veliyanoor Anganwadi</div>
+                    </div>
+                    <button class="button" onclick="testWorkerAccess('athulyaanal@gmail.com')">
+                        🔍 Test Access
+                    </button>
+                    <button class="button" onclick="loadWorkerData('athulyaanal@gmail.com')">
+                        📋 Load Children
+                    </button>
+                </div>
+
+                <div class="worker-card">
+                    <div class="worker-info">
+                        <div>
+                            <div class="worker-name">Mohanakumari</div>
+                            <div class="worker-email">athulyaarunu@gmail.com</div>
+                        </div>
+                        <div class="worker-center">Akkarakunnu Anganwadi</div>
+                    </div>
+                    <button class="button" onclick="testWorkerAccess('athulyaarunu@gmail.com')">
+                        🔍 Test Access
+                    </button>
+                    <button class="button" onclick="loadWorkerData('athulyaarunu@gmail.com')">
+                        📋 Load Children
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results"></div>
+
+            <!-- Log Section -->
+            <div class="log" id="log">
+                <div class="log-entry">🚀 Worker Attendance Test Ready</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5005/api/attendance-test';
+        let currentWorker = null;
+        let currentChildren = [];
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type === 'error' ? 'log-error' : type === 'success' ? 'log-success' : ''}`;
+            entry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function testWorkerAccess(workerEmail) {
+            addLog(`🧪 Testing access for ${workerEmail}...`);
+            
+            try {
+                const response = await fetch(`${API_BASE}/test-worker-attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ workerEmail })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✅ ${data.message}`, 'success');
+                    addLog(`🏢 Center: ${data.data.worker.anganwadiCenter}`, 'success');
+                    addLog(`👶 Children: ${data.data.children.length}`, 'success');
+                    addLog(`📊 Present: ${data.data.statistics.present}, Absent: ${data.data.statistics.absent}`, 'success');
+                } else {
+                    addLog(`❌ ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error testing worker access: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadWorkerData(workerEmail) {
+            addLog(`📋 Loading children for ${workerEmail}...`);
+            
+            try {
+                const response = await fetch(`${API_BASE}/test-worker-attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ workerEmail })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentWorker = data.data.worker;
+                    currentChildren = data.data.children;
+                    displayWorkerData(data.data);
+                    addLog(`✅ Loaded ${data.data.children.length} children for ${data.data.worker.name}`, 'success');
+                } else {
+                    addLog(`❌ Failed to load data: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error loading worker data: ${error.message}`, 'error');
+            }
+        }
+
+        function displayWorkerData(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML = `
+                <div class="results">
+                    <h3>📋 ${data.worker.name} - ${data.worker.anganwadiCenter}</h3>
+                    <p><strong>Date:</strong> ${data.date}</p>
+                    
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-number">${data.statistics.total}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${data.statistics.present}</div>
+                            <div class="stat-label">Present</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${data.statistics.absent}</div>
+                            <div class="stat-label">Absent</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${data.statistics.late}</div>
+                            <div class="stat-label">Late</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${data.statistics.marked}</div>
+                            <div class="stat-label">Marked</div>
+                        </div>
+                    </div>
+
+                    <div class="children-grid">
+                        ${data.children.map(child => `
+                            <div class="child-card">
+                                <div class="child-name">${child.name}</div>
+                                <div class="child-details">
+                                    Age: ${child.age} | Gender: ${child.gender}<br>
+                                    Parent: ${child.parentName} | Phone: ${child.parentPhone}
+                                </div>
+                                <div class="attendance-status status-${child.attendanceStatus}">
+                                    ${child.attendanceStatus.replace('-', ' ').toUpperCase()}
+                                </div>
+                                ${child.timeIn ? `<div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Time In: ${child.timeIn}</div>` : ''}
+                                ${child.notes ? `<div style="font-size: 0.8rem; color: #666; margin-top: 5px;">Notes: ${child.notes}</div>` : ''}
+                                
+                                <div class="attendance-controls">
+                                    <select id="status-${child._id}">
+                                        <option value="present" ${child.attendanceStatus === 'present' ? 'selected' : ''}>Present</option>
+                                        <option value="absent" ${child.attendanceStatus === 'absent' ? 'selected' : ''}>Absent</option>
+                                        <option value="late" ${child.attendanceStatus === 'late' ? 'selected' : ''}>Late</option>
+                                    </select>
+                                    <input type="time" id="time-${child._id}" value="${child.timeIn ? child.timeIn : ''}" placeholder="Time In">
+                                    <label><input type="checkbox" id="nutrition-${child._id}" ${child.nutritionReceived ? 'checked' : ''}> Nutrition</label>
+                                    <label><input type="checkbox" id="health-${child._id}" ${child.healthCheckDone ? 'checked' : ''}> Health Check</label>
+                                    <br>
+                                    <input type="text" id="notes-${child._id}" value="${child.notes}" placeholder="Notes" style="width: 100%; margin-top: 5px;">
+                                    <button class="button" onclick="markAttendance('${child._id}')" style="margin-top: 5px;">
+                                        ✅ Mark
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function markAttendance(childId) {
+            if (!currentWorker) {
+                addLog('❌ No worker selected', 'error');
+                return;
+            }
+
+            const status = document.getElementById(`status-${childId}`).value;
+            const timeIn = document.getElementById(`time-${childId}`).value;
+            const nutritionReceived = document.getElementById(`nutrition-${childId}`).checked;
+            const healthCheckDone = document.getElementById(`health-${childId}`).checked;
+            const notes = document.getElementById(`notes-${childId}`).value;
+
+            const child = currentChildren.find(c => c._id === childId);
+            addLog(`📝 Marking attendance for ${child.name} as ${status}...`);
+
+            try {
+                const response = await fetch(`${API_BASE}/test-mark-attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        workerEmail: currentWorker.email,
+                        childId,
+                        status,
+                        timeIn,
+                        nutritionReceived,
+                        healthCheckDone,
+                        notes
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`✅ ${data.message}`, 'success');
+                    // Reload the data to show updated attendance
+                    loadWorkerData(currentWorker.email);
+                } else {
+                    addLog(`❌ Failed to mark attendance: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error marking attendance: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        addLog('🔧 Test page initialized. Click buttons to test worker access and attendance marking.');
+    </script>
+</body>
+</html>

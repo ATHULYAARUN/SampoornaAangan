@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📧 Email Configuration Test - SampoornaAngan</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .input {
+            padding: 12px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            width: 200px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #4CAF50;
+            display: none;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .warning {
+            border-left-color: #ff9800;
+            background: rgba(255, 152, 0, 0.2);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-ok { background: #4CAF50; }
+        .status-error { background: #f44336; }
+        .status-warning { background: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>📧 Email Configuration Test</h1>
+    
+    <div class="container">
+        <h2>🔧 Quick Email Setup Guide</h2>
+        
+        <div class="step">
+            <h3>Step 1: Get Gmail App Password</h3>
+            <p>1. Go to <a href="https://myaccount.google.com/security" target="_blank" style="color: #4CAF50;">Google Account Security</a></p>
+            <p>2. Enable 2-Step Verification</p>
+            <p>3. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #4CAF50;">App Passwords</a></p>
+            <p>4. Generate password for "Mail"</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Update Environment Variables</h3>
+            <p>Edit your <code>backend/.env</code> file:</p>
+            <div class="code">
+EMAIL_USER=your-gmail@gmail.com<br>
+EMAIL_PASS=your-16-character-app-password<br>
+EMAIL_FROM=noreply@sampoornaangan.gov.in
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Test Configuration</h3>
+            <div>
+                <input type="email" id="adminEmail" class="input" placeholder="Admin Email" value="admin@example.com">
+                <input type="password" id="adminPassword" class="input" placeholder="Admin Password" value="admin123">
+                <button class="button" onclick="testEmailConfig()">🔍 Test Email Config</button>
+            </div>
+            <div id="emailTestResult" class="result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Test Resend Credentials</h3>
+            <p>After email is configured, test the resend functionality:</p>
+            <div>
+                <input type="text" id="testWorkerId" class="input" placeholder="Worker ID (optional)">
+                <button class="button" onclick="testResendCredentials()" id="resendBtn">📧 Test Resend</button>
+            </div>
+            <div id="resendTestResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 System Status</h2>
+        <div id="systemStatus">
+            <p>🔥 <strong>Firebase:</strong> <span class="status-badge status-ok">Ready</span></p>
+            <p>🗄️ <strong>MongoDB:</strong> <span class="status-badge status-ok">Connected</span></p>
+            <p>📧 <strong>Email Service:</strong> <span class="status-badge status-error" id="emailStatus">Not Configured</span></p>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        const API_BASE = window.location.hostname === 'localhost' ? 
+            'http://localhost:5005' : 
+            'https://your-backend-url.com';
+
+        function showResult(elementId, message, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.innerHTML = message;
+        }
+
+        async function testEmailConfig() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            showResult('emailTestResult', '⏳ Testing email configuration...', 'warning');
+
+            try {
+                // First authenticate
+                const authResponse = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const authData = await authResponse.json();
+
+                if (!authResponse.ok) {
+                    throw new Error(`Authentication failed: ${authData.message}`);
+                }
+
+                adminToken = authData.token;
+
+                // Test email configuration
+                const emailResponse = await fetch(`${API_BASE}/api/admin/check-email-config`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const emailData = await emailResponse.json();
+
+                if (emailResponse.ok) {
+                    const statusIcon = emailData.emailConfigured ? '✅' : '❌';
+                    const statusText = emailData.canSendEmails ? 'Ready to send emails!' : 'Configuration needed';
+                    
+                    showResult('emailTestResult', `
+                        ${statusIcon} <strong>Email Service Status:</strong><br>
+                        <strong>Configured:</strong> ${emailData.emailConfigured ? 'Yes' : 'No'}<br>
+                        <strong>Service:</strong> ${emailData.service}<br>
+                        <strong>Status:</strong> ${statusText}<br>
+                        <strong>Message:</strong> ${emailData.message}
+                    `, emailData.canSendEmails ? 'success' : 'warning');
+
+                    // Update system status
+                    const emailStatus = document.getElementById('emailStatus');
+                    if (emailData.canSendEmails) {
+                        emailStatus.textContent = 'Ready';
+                        emailStatus.className = 'status-badge status-ok';
+                    } else {
+                        emailStatus.textContent = 'Needs Setup';
+                        emailStatus.className = 'status-badge status-warning';
+                    }
+                } else {
+                    throw new Error(emailData.message || 'Failed to check email configuration');
+                }
+
+            } catch (error) {
+                showResult('emailTestResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testResendCredentials() {
+            if (!adminToken) {
+                showResult('resendTestResult', '❌ Please test email configuration first to authenticate', 'error');
+                return;
+            }
+
+            const workerId = document.getElementById('testWorkerId').value;
+            const button = document.getElementById('resendBtn');
+            
+            button.disabled = true;
+            button.textContent = '⏳ Testing...';
+            
+            showResult('resendTestResult', '⏳ Testing resend credentials...', 'warning');
+
+            try {
+                let endpoint, body;
+                
+                if (workerId) {
+                    // Test with specific worker ID
+                    endpoint = `${API_BASE}/api/admin/resend-worker-credentials`;
+                    body = JSON.stringify({ workerId });
+                } else {
+                    // Test endpoint availability
+                    showResult('resendTestResult', '⚠️ No Worker ID provided. Please provide a valid worker ID to test resend functionality.', 'warning');
+                    return;
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: body
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult('resendTestResult', `
+                        ✅ <strong>Resend Credentials Test Successful!</strong><br>
+                        <strong>Worker:</strong> ${data.data?.workerName || 'Test Worker'}<br>
+                        <strong>Email:</strong> ${data.data?.workerEmail || 'test@example.com'}<br>
+                        <strong>Message:</strong> ${data.message}<br>
+                        <strong>Temp Password:</strong> ${data.tempPassword || 'Generated'}
+                    `, 'success');
+                } else {
+                    showResult('resendTestResult', `⚠️ ${data.message || 'Test completed with issues'}`, 'warning');
+                }
+
+            } catch (error) {
+                showResult('resendTestResult', `❌ Error testing resend: ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '📧 Test Resend';
+            }
+        }
+
+        // Auto-load system status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Email Configuration Test loaded');
+            console.log('API Base:', API_BASE);
+        });
+    </script>
+</body>
+</html>

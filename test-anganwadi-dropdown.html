@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anganwadi Center Dropdown Implementation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success {
+            background-color: #f0f9ff;
+            border-color: #0ea5e9;
+        }
+        .warning {
+            background-color: #fffbeb;
+            border-color: #f59e0b;
+        }
+        .info {
+            background-color: #f8fafc;
+            border-color: #64748b;
+        }
+        h1 {
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #4b5563;
+            margin-bottom: 15px;
+        }
+        .test-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .test-link:hover {
+            background: #2563eb;
+        }
+        .code {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.implemented {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .center-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .center-item {
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        .center-item h4 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .center-details {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+        ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 Anganwadi Center Dropdown - Implementation Complete</h1>
+        
+        <div class="test-section success">
+            <h2>✅ Implementation Status</h2>
+            <div class="status implemented">
+                Complete: Anganwadi Center dropdown with database centers in child registration form
+            </div>
+            
+            <h3>What's Been Implemented:</h3>
+            <ul>
+                <li><strong>Dropdown Selection:</strong> Replaced text input with dropdown in ChildRegistrationForm.jsx</li>
+                <li><strong>Database Integration:</strong> Added the two Anganwadi centers from database</li>
+                <li><strong>Enhanced UI:</strong> Building icon and center information display</li>
+                <li><strong>Visual Feedback:</strong> Selected center details shown below dropdown</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h2>🏢 Available Anganwadi Centers</h2>
+            
+            <h3>Centers from Database:</h3>
+            <div class="center-card">
+                <div class="center-item">
+                    <h4>🏢 Akkarakkunnu Anganwadi</h4>
+                    <div class="center-details">
+                        <strong>Code:</strong> AWC09001<br>
+                        <strong>Location:</strong> Akkarakkunnu, Thiruvananthapuram, Kerala<br>
+                        <strong>Ward:</strong> 9<br>
+                        <strong>Status:</strong> Active
+                    </div>
+                </div>
+                
+                <div class="center-item">
+                    <h4>🏢 Veliyanoor Anganwadi</h4>
+                    <div class="center-details">
+                        <strong>Code:</strong> AWC09002<br>
+                        <strong>Location:</strong> Veliyanoor, Thiruvananthapuram, Kerala<br>
+                        <strong>Ward:</strong> 9<br>
+                        <strong>Status:</strong> Active
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section warning">
+            <h2>🧪 How to Test</h2>
+            
+            <h3>Frontend Testing Steps:</h3>
+            <ol>
+                <li>Visit the Anganwadi Worker Dashboard: <a href="http://localhost:5174/aww-dashboard" class="test-link">AWW Dashboard</a></li>
+                <li>Navigate to Registration section</li>
+                <li>Click "Register Child"</li>
+                <li>Scroll down to the "Anganwadi Center" field</li>
+                <li>Click the dropdown to see both centers:
+                    <ul>
+                        <li>Akkarakkunnu Anganwadi - Akkarakkunnu, Thiruvananthapuram, Kerala (Ward 9)</li>
+                        <li>Veliyanoor Anganwadi - Veliyanoor, Thiruvananthapuram, Kerala (Ward 9)</li>
+                    </ul>
+                </li>
+                <li>Select a center and observe the information panel below</li>
+                <li>Complete the form and submit to test validation</li>
+            </ol>
+            
+            <h3>What You Should See:</h3>
+            <ul>
+                <li>Building icon next to the dropdown</li>
+                <li>Dropdown with "Select Anganwadi Center" placeholder</li>
+                <li>Two center options with location and ward information</li>
+                <li>Blue information panel showing selected center details</li>
+                <li>Center code and location displayed clearly</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h2>🔧 Technical Implementation</h2>
+            
+            <h3>Frontend Changes (ChildRegistrationForm.jsx):</h3>
+            <div class="code">
+// Added Building icon import
+import { Building } from 'lucide-react';
+
+// Added anganwadiCenters array
+const anganwadiCenters = [
+  {
+    id: 1,
+    name: 'Akkarakkunnu Anganwadi',
+    code: 'AWC09001',
+    location: 'Akkarakkunnu, Thiruvananthapuram, Kerala',
+    ward: 9
+  },
+  {
+    id: 2,
+    name: 'Veliyanoor Anganwadi',
+    code: 'AWC09002',
+    location: 'Veliyanoor, Thiruvananthapuram, Kerala',
+    ward: 9
+  }
+];
+
+// Replaced text input with dropdown
+&lt;select
+  name="anganwadiCenter"
+  value={formData.anganwadiCenter}
+  onChange={handleChange}
+  className={`${inputClass} pl-12`}
+&gt;
+  &lt;option value=""&gt;Select Anganwadi Center&lt;/option&gt;
+  {anganwadiCenters.map(center =&gt; (
+    &lt;option key={center.id} value={center.name}&gt;
+      {center.name} - {center.location} (Ward {center.ward})
+    &lt;/option&gt;
+  ))}
+&lt;/select&gt;
+            </div>
+            
+            <h3>Enhanced Features:</h3>
+            <ul>
+                <li><strong>Visual Icon:</strong> Building icon for better visual identification</li>
+                <li><strong>Detailed Options:</strong> Each option shows center name, location, and ward</li>
+                <li><strong>Information Panel:</strong> Selected center details displayed below dropdown</li>
+                <li><strong>Consistent Styling:</strong> Matches existing form field styling</li>
+                <li><strong>Validation Ready:</strong> Works with existing form validation</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h2>🎨 User Experience Features</h2>
+            
+            <h3>Dropdown Improvements:</h3>
+            <ul>
+                <li>🏢 <strong>Building Icon:</strong> Clear visual indicator for center selection</li>
+                <li>📋 <strong>Comprehensive Options:</strong> Full center information in dropdown text</li>
+                <li>🔍 <strong>Easy Selection:</strong> No typing required, just select from list</li>
+                <li>ℹ️ <strong>Information Display:</strong> Selected center details shown immediately</li>
+                <li>✅ <strong>Validation Compatible:</strong> Works with existing form validation</li>
+            </ul>
+            
+            <h3>Information Panel Features:</h3>
+            <ul>
+                <li>Center name with building icon</li>
+                <li>Center code in parentheses</li>
+                <li>Location with pin emoji</li>
+                <li>Blue color scheme for consistency</li>
+                <li>Only shows when center is selected</li>
+            </ul>
+        </div>
+
+        <div class="test-section success">
+            <h2>📋 Data Source</h2>
+            
+            <h3>Database Centers Used:</h3>
+            <div class="code">
+// Centers from MongoDB AnganwadiCenter collection
+1. Akkarakkunnu Anganwadi (AWC09001)
+   - Location: Akkarakkunnu, Thiruvananthapuram, Kerala
+   - Ward: 9
+   - Status: Active
+
+2. Veliyanoor Anganwadi (AWC09002)
+   - Location: Veliyanoor, Thiruvananthapuram, Kerala
+   - Ward: 9
+   - Status: Active
+            </div>
+            
+            <h3>Future Enhancement Options:</h3>
+            <ul>
+                <li><strong>Dynamic Loading:</strong> Fetch centers from API instead of hardcoded array</li>
+                <li><strong>Search/Filter:</strong> Add search functionality for many centers</li>
+                <li><strong>Center Details:</strong> Show capacity, facilities, and contact info</li>
+                <li><strong>Geolocation:</strong> Auto-suggest nearest center based on address</li>
+                <li><strong>Status Indicators:</strong> Show if center is accepting new registrations</li>
+            </ul>
+        </div>
+
+        <div class="test-section success">
+            <h2>🎯 Benefits of Dropdown Implementation</h2>
+            
+            <h3>✅ Advantages:</h3>
+            <ul>
+                <li><strong>Data Consistency:</strong> Prevents typos and variations in center names</li>
+                <li><strong>User Friendly:</strong> No need to remember exact center names</li>
+                <li><strong>Information Rich:</strong> Shows location and ward details upfront</li>
+                <li><strong>Validation Ready:</strong> Only valid centers can be selected</li>
+                <li><strong>Database Aligned:</strong> Uses exact center names from database</li>
+                <li><strong>Professional UI:</strong> More polished than free text input</li>
+            </ul>
+            
+            <h3>🔒 Data Integrity:</h3>
+            <ul>
+                <li>Prevents invalid center names from being entered</li>
+                <li>Ensures consistency with database records</li>
+                <li>Reduces data cleanup requirements</li>
+                <li>Improves reporting and analytics accuracy</li>
+            </ul>
+        </div>
+
+        <div class="test-section success">
+            <h2>🚀 Implementation Complete</h2>
+            <div class="status implemented">
+                Ready for Testing: Anganwadi Center dropdown fully implemented
+            </div>
+            
+            <h3>Test the Implementation:</h3>
+            <a href="http://localhost:5174/aww-dashboard" class="test-link">Go to AWW Dashboard</a>
+            <a href="http://localhost:5174/login" class="test-link">Login as AWW</a>
+            
+            <h3>What's Working:</h3>
+            <ul>
+                <li>Dropdown shows both Anganwadi centers from database</li>
+                <li>Professional UI with building icon and information display</li>
+                <li>Form validation works with dropdown selection</li>
+                <li>Selected center details displayed clearly</li>
+                <li>Consistent styling with rest of the form</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏢 Anganwadi Center Dropdown Test Page Loaded');
+            console.log('Available Centers:');
+            console.log('1. Akkarakkunnu Anganwadi (AWC09001)');
+            console.log('2. Veliyanoor Anganwadi (AWC09002)');
+            console.log('Implementation: Dropdown with center details display');
+        });
+    </script>
+</body>
+</html>

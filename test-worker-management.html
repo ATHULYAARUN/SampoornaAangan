@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Management - Resend Credentials Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0e27;
+            color: white;
+        }
+        .container {
+            background: #1a1f3a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #3a4d7a;
+            border-radius: 5px;
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .result {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            color: #ffcccb;
+        }
+        .loading {
+            color: #ffa500;
+        }
+        .worker-row {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: #2a2f4a;
+            border-radius: 4px;
+        }
+        .worker-info {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .icon-button {
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 14px;
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .resend-btn {
+            background: #4CAF50;
+        }
+        .resend-btn:hover:not(:disabled) {
+            background: #45a049;
+        }
+        .resend-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Worker Management - Resend Credentials Test</h1>
+    
+    <div class="container">
+        <h2>📧 Test Resend Credentials Functionality</h2>
+        
+        <div class="test-section">
+            <h3>1. Admin Authentication</h3>
+            <input type="email" id="adminEmail" class="input" placeholder="Admin Email" value="admin@example.com">
+            <input type="password" id="adminPassword" class="input" placeholder="Admin Password" value="admin123">
+            <button class="button" onclick="authenticateAdmin()">Login as Admin</button>
+            <div id="authResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Check Email Configuration</h3>
+            <button class="button" onclick="checkEmailConfig()">Check Email Service</button>
+            <div id="emailConfigResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Sample Workers</h3>
+            <div id="workersContainer">
+                <!-- Workers will be populated here -->
+            </div>
+            <button class="button" onclick="loadWorkers()">Load Workers</button>
+            <div id="workersResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Test Results</h3>
+            <div id="testResults" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let adminToken = null;
+        const API_BASE = window.location.hostname === 'localhost' ? 
+            'http://localhost:5000' : 
+            'https://your-backend-url.com';
+
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : ''}`;
+            element.innerHTML = message;
+        }
+
+        function showLoading(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'result loading';
+            element.innerHTML = `⏳ ${message}`;
+        }
+
+        async function authenticateAdmin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (!email || !password) {
+                showResult('authResult', '❌ Please enter email and password', true);
+                return;
+            }
+
+            showLoading('authResult', 'Authenticating admin...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    adminToken = data.token;
+                    showResult('authResult', `✅ Admin authenticated successfully!<br>
+                        <strong>Role:</strong> ${data.user.role}<br>
+                        <strong>Email:</strong> ${data.user.email}<br>
+                        <strong>Token:</strong> ${data.token.substring(0, 20)}...`);
+                } else {
+                    showResult('authResult', `❌ Authentication failed: ${data.message || 'Unknown error'}`, true);
+                }
+            } catch (error) {
+                showResult('authResult', `❌ Network error: ${error.message}`, true);
+            }
+        }
+
+        async function checkEmailConfig() {
+            if (!adminToken) {
+                showResult('emailConfigResult', '❌ Please authenticate as admin first', true);
+                return;
+            }
+
+            showLoading('emailConfigResult', 'Checking email configuration...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/check-email-config`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult('emailConfigResult', `✅ Email configuration check:<br>
+                        <strong>Status:</strong> ${data.emailConfigured ? 'Configured' : 'Not Configured'}<br>
+                        <strong>Service:</strong> ${data.service || 'Not specified'}<br>
+                        <strong>Details:</strong> ${data.message}`);
+                } else {
+                    showResult('emailConfigResult', `⚠️ Email config issue: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('emailConfigResult', `❌ Error checking email config: ${error.message}`, true);
+            }
+        }
+
+        async function loadWorkers() {
+            if (!adminToken) {
+                showResult('workersResult', '❌ Please authenticate as admin first', true);
+                return;
+            }
+
+            showLoading('workersResult', 'Loading workers...');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/users?role=worker`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.users) {
+                    const workers = data.users.filter(user => user.role === 'worker').slice(0, 5); // Show first 5 workers
+                    
+                    const workersContainer = document.getElementById('workersContainer');
+                    workersContainer.innerHTML = '';
+
+                    if (workers.length === 0) {
+                        workersContainer.innerHTML = '<p>No workers found. You may need to create some test workers first.</p>';
+                    } else {
+                        workers.forEach(worker => {
+                            const workerDiv = document.createElement('div');
+                            workerDiv.className = 'worker-row';
+                            workerDiv.innerHTML = `
+                                <div class="worker-info">
+                                    <strong>${worker.name || 'N/A'}</strong><br>
+                                    <small>${worker.email}</small><br>
+                                    <small>Status: ${worker.isActive ? 'Active' : 'Inactive'}</small>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="icon-button resend-btn" onclick="resendCredentials('${worker._id}', '${worker.email}')" 
+                                            id="resend-${worker._id}" title="Resend Credentials">
+                                        📧
+                                    </button>
+                                </div>
+                            `;
+                            workersContainer.appendChild(workerDiv);
+                        });
+                    }
+
+                    showResult('workersResult', `✅ Loaded ${workers.length} workers successfully!`);
+                } else {
+                    showResult('workersResult', `❌ Failed to load workers: ${data.message || 'Unknown error'}`, true);
+                }
+            } catch (error) {
+                showResult('workersResult', `❌ Error loading workers: ${error.message}`, true);
+            }
+        }
+
+        async function resendCredentials(workerId, workerEmail) {
+            if (!adminToken) {
+                showResult('testResults', '❌ Please authenticate as admin first', true);
+                return;
+            }
+
+            // Show confirmation dialog
+            if (!confirm(`Are you sure you want to resend credentials to ${workerEmail}?`)) {
+                return;
+            }
+
+            const button = document.getElementById(`resend-${workerId}`);
+            const originalContent = button.innerHTML;
+            
+            // Show loading state
+            button.disabled = true;
+            button.innerHTML = '<div class="spinner"></div>';
+
+            showLoading('testResults', `Resending credentials to ${workerEmail}...`);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/resend-worker-credentials`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ workerId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult('testResults', `✅ Credentials resent successfully!<br>
+                        <strong>Worker:</strong> ${workerEmail}<br>
+                        <strong>Message:</strong> ${data.message}<br>
+                        <strong>Temporary Password:</strong> ${data.tempPassword || 'Generated'}<br>
+                        <small>The worker should receive an email with their new credentials.</small>`);
+                } else {
+                    showResult('testResults', `❌ Failed to resend credentials: ${data.message || 'Unknown error'}`, true);
+                }
+            } catch (error) {
+                showResult('testResults', `❌ Error resending credentials: ${error.message}`, true);
+            } finally {
+                // Restore button state
+                button.disabled = false;
+                button.innerHTML = originalContent;
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Worker Management Test Page Loaded');
+            console.log('API Base URL:', API_BASE);
+        });
+    </script>
+</body>
+</html>

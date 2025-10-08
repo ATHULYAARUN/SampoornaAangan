@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .credentials {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .status.pending {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .instruction {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin: 15px 0;
+        }
+        .iframe-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Parent Dashboard Test - Child Data Fix</h1>
+        
+        <div class="credentials">
+            <h3>🔐 Test Login Credentials</h3>
+            <p><strong>Email:</strong> lekha.parent@test.com</p>
+            <p><strong>Password:</strong> testparent123</p>
+            <p><strong>Role:</strong> Select "Parent/Guardian"</p>
+        </div>
+
+        <div class="instruction">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li>Click the "Open Login Page" button below</li>
+                <li>Use the test credentials above to login</li>
+                <li>Navigate to the "My Children" page in the Parent Dashboard</li>
+                <li>Check if the child details now show:</li>
+                <ul>
+                    <li>✅ <strong>Date of Birth</strong> (should not be "Not scheduled")</li>
+                    <li>✅ <strong>Blood Group</strong> (should not be "Not recorded")</li>
+                    <li>✅ <strong>Enrollment Date</strong> (should not be "Not scheduled")</li>
+                </ul>
+                <li>Expected data for the test children:</li>
+                <ul>
+                    <li><strong>Aarav Arun</strong>: DOB: 2019-05-15, Blood Group: O+</li>
+                    <li><strong>Priya Arun</strong>: DOB: 2021-03-20, Blood Group: A+</li>
+                </ul>
+            </ol>
+        </div>
+
+        <div>
+            <button onclick="openLogin()">🔐 Open Login Page</button>
+            <button onclick="openDashboard()">📊 Open Dashboard Directly</button>
+            <button onclick="testAPI()">🧪 Test API</button>
+        </div>
+
+        <div id="status" class="status pending">Ready for testing...</div>
+        
+        <div class="iframe-container" id="iframe-container" style="display: none;">
+            <iframe id="testFrame" src=""></iframe>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function openLogin() {
+            const iframe = document.getElementById('testFrame');
+            const container = document.getElementById('iframe-container');
+            const status = document.getElementById('status');
+            
+            iframe.src = 'http://localhost:5174/login';
+            container.style.display = 'block';
+            
+            status.textContent = '🔐 Login page opened. Use the test credentials above.';
+            status.className = 'status pending';
+        }
+
+        function openDashboard() {
+            const iframe = document.getElementById('testFrame');
+            const container = document.getElementById('iframe-container');
+            const status = document.getElementById('status');
+            
+            iframe.src = 'http://localhost:5174/parent-dashboard';
+            container.style.display = 'block';
+            
+            status.textContent = '📊 Dashboard opened. You may need to login first.';
+            status.className = 'status pending';
+        }
+
+        async function testAPI() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            status.textContent = '🧪 Testing API...';
+            status.className = 'status pending';
+            
+            try {
+                // Try to login and get data
+                const loginResponse = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'lekha.parent@test.com',
+                        password: 'testparent123',
+                        role: 'parent'
+                    })
+                });
+
+                const loginData = await loginResponse.json();
+                
+                if (loginData.success) {
+                    status.textContent = '✅ Login successful, fetching children...';
+                    
+                    // Get children data
+                    const childrenResponse = await fetch('/api/registration/my-children', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${loginData.token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const childrenData = await childrenResponse.json();
+                    
+                    if (childrenData.success) {
+                        status.textContent = '✅ API test successful!';
+                        status.className = 'status success';
+                        
+                        const children = childrenData.data.children;
+                        let html = `<h3>👶 API Test Results (${children.length} children found)</h3>`;
+                        
+                        children.forEach((child, index) => {
+                            html += `
+                            <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                                <h4>${child.name}</h4>
+                                <p><strong>🗓️ Date of Birth:</strong> ${child.dateOfBirth ? new Date(child.dateOfBirth).toLocaleDateString() : '❌ MISSING'}</p>
+                                <p><strong>🩸 Blood Group:</strong> ${child.bloodGroup || '❌ MISSING'}</p>
+                                <p><strong>📅 Enrollment Date:</strong> ${child.enrollmentDate ? new Date(child.enrollmentDate).toLocaleDateString() : '❌ MISSING'}</p>
+                            </div>`;
+                        });
+                        
+                        results.innerHTML = html;
+                    } else {
+                        throw new Error(`Children API failed: ${childrenData.message}`);
+                    }
+                } else {
+                    throw new Error(`Login failed: ${loginData.message}`);
+                }
+
+            } catch (error) {
+                status.textContent = `❌ API Error: ${error.message}`;
+                status.className = 'status error';
+                results.innerHTML = `<pre style="color: red;">Error: ${error.message}</pre>`;
+            }
+        }
+
+        // Auto-refresh status every 5 seconds when iframe is open
+        setInterval(() => {
+            const iframe = document.getElementById('testFrame');
+            const container = document.getElementById('iframe-container');
+            
+            if (container.style.display !== 'none' && iframe.src) {
+                try {
+                    // Check if we can access iframe content (same-origin)
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (iframeDoc && iframeDoc.title) {
+                        console.log('Current page:', iframeDoc.title);
+                    }
+                } catch (e) {
+                    // Cross-origin, can't access content
+                }
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

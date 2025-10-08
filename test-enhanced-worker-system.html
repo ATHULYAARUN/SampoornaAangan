@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Enhanced Worker Creation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.pending { background-color: #fff3cd; color: #856404; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .form-data {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Enhanced Anganwadi Worker Registration Test</h1>
+        
+        <div class="test-section">
+            <div class="test-title">Backend Server Status</div>
+            <div class="status pending" id="serverStatus">Checking...</div>
+            <button onclick="checkServerStatus()">Check Server</button>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">API Endpoints Test</div>
+            <div class="status pending" id="apiStatus">Not tested</div>
+            <button onclick="testAPIEndpoints()">Test API</button>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">Enhanced Worker Form Data Test</div>
+            <div class="status pending" id="formStatus">Not tested</div>
+            <button onclick="testEnhancedForm()">Test Enhanced Form</button>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">File Upload Test</div>
+            <div class="status pending" id="uploadStatus">Not tested</div>
+            <input type="file" id="testFile" accept="image/*" style="margin: 10px 0;">
+            <button onclick="testFileUpload()">Test File Upload</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5005/api';
+
+        async function checkServerStatus() {
+            const statusEl = document.getElementById('serverStatus');
+            const resultsEl = document.getElementById('results');
+            
+            try {
+                statusEl.textContent = 'Checking...';
+                statusEl.className = 'status pending';
+                
+                const response = await fetch('http://localhost:5005/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = '✅ Server is running';
+                    statusEl.className = 'status success';
+                    resultsEl.innerHTML = `
+                        <div style="background-color: #d4edda; padding: 10px; border-radius: 5px;">
+                            <strong>Server Status:</strong> ${data.status}<br>
+                            <strong>Message:</strong> ${data.message}<br>
+                            <strong>Environment:</strong> ${data.environment}<br>
+                            <strong>Timestamp:</strong> ${data.timestamp}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Server not responding properly');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Server not accessible';
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 10px; border-radius: 5px;">
+                        <strong>Error:</strong> ${error.message}<br>
+                        <strong>Note:</strong> Make sure the backend server is running on port 5005
+                    </div>
+                `;
+            }
+        }
+
+        async function testAPIEndpoints() {
+            const statusEl = document.getElementById('apiStatus');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            const endpoints = [
+                { path: '/auth', method: 'GET' },
+                { path: '/admin', method: 'GET' },
+                { path: '/users', method: 'GET' }
+            ];
+            
+            let results = '<div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">';
+            results += '<h3>API Endpoint Test Results:</h3>';
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`${API_BASE}${endpoint.path}`);
+                    const status = response.status;
+                    results += `<div>📍 ${endpoint.method} ${endpoint.path}: <span style="color: ${status < 500 ? 'green' : 'red'}">${status}</span></div>`;
+                } catch (error) {
+                    results += `<div>📍 ${endpoint.method} ${endpoint.path}: <span style="color: red">Failed - ${error.message}</span></div>`;
+                }
+            }
+            
+            results += '</div>';
+            resultsEl.innerHTML = results;
+            
+            statusEl.textContent = '✅ API endpoints tested';
+            statusEl.className = 'status success';
+        }
+
+        async function testEnhancedForm() {
+            const statusEl = document.getElementById('formStatus');
+            const resultsEl = document.getElementById('results');
+            
+            statusEl.textContent = 'Testing enhanced form data...';
+            statusEl.className = 'status pending';
+            
+            // Sample enhanced worker data
+            const enhancedWorkerData = {
+                name: 'Test Worker',
+                email: 'testworker@example.com',
+                role: 'anganwadi-worker',
+                gender: 'female',
+                dateOfBirth: '1990-05-15',
+                employeeId: 'AW001',
+                qualification: 'Bachelor of Arts',
+                experience: 5,
+                salary: 25000,
+                emergencyContact: {
+                    name: 'Emergency Contact',
+                    relationship: 'Sister',
+                    phone: '9876543210'
+                }
+            };
+            
+            let results = '<div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px;">';
+            results += '<h3>Enhanced Worker Form Data Test:</h3>';
+            results += '<div class="form-data">' + JSON.stringify(enhancedWorkerData, null, 2) + '</div>';
+            
+            // Validate the data structure
+            const validations = [
+                { field: 'gender', valid: enhancedWorkerData.gender === 'female', message: 'Gender restriction (female only)' },
+                { field: 'dateOfBirth', valid: new Date().getFullYear() - new Date(enhancedWorkerData.dateOfBirth).getFullYear() >= 18, message: 'Age validation (18+ years)' },
+                { field: 'employeeId', valid: enhancedWorkerData.employeeId && enhancedWorkerData.employeeId.length > 0, message: 'Employee ID present' },
+                { field: 'emergencyContact', valid: enhancedWorkerData.emergencyContact && enhancedWorkerData.emergencyContact.name, message: 'Emergency contact information' }
+            ];
+            
+            results += '<h4>Validation Results:</h4>';
+            validations.forEach(validation => {
+                const icon = validation.valid ? '✅' : '❌';
+                const color = validation.valid ? 'green' : 'red';
+                results += `<div style="color: ${color}">${icon} ${validation.message}</div>`;
+            });
+            
+            results += '</div>';
+            resultsEl.innerHTML = results;
+            
+            statusEl.textContent = '✅ Enhanced form data validated';
+            statusEl.className = 'status success';
+        }
+
+        async function testFileUpload() {
+            const statusEl = document.getElementById('uploadStatus');
+            const resultsEl = document.getElementById('results');
+            const fileInput = document.getElementById('testFile');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a file first');
+                return;
+            }
+            
+            statusEl.textContent = 'Testing file upload...';
+            statusEl.className = 'status pending';
+            
+            const formData = new FormData();
+            formData.append('photo', fileInput.files[0]);
+            formData.append('name', 'Test Worker');
+            formData.append('email', 'testworker@example.com');
+            formData.append('role', 'anganwadi-worker');
+            formData.append('gender', 'female');
+            formData.append('dateOfBirth', '1990-05-15');
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/workers`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                let results = '<div style="background-color: #f0f8ff; padding: 15px; border-radius: 5px;">';
+                results += '<h3>File Upload Test Results:</h3>';
+                
+                if (response.ok) {
+                    results += `<div style="color: green">✅ Upload successful!</div>`;
+                    results += `<div>Worker ID: ${result.user?._id || 'N/A'}</div>`;
+                    results += `<div>Photo Path: ${result.user?.photoPath || 'N/A'}</div>`;
+                    statusEl.textContent = '✅ File upload successful';
+                    statusEl.className = 'status success';
+                } else {
+                    results += `<div style="color: orange">⚠️ Upload failed: ${result.error || result.message}</div>`;
+                    statusEl.textContent = '⚠️ File upload failed';
+                    statusEl.className = 'status error';
+                }
+                
+                results += '<div class="form-data">' + JSON.stringify(result, null, 2) + '</div>';
+                results += '</div>';
+                resultsEl.innerHTML = results;
+                
+            } catch (error) {
+                statusEl.textContent = '❌ File upload error';
+                statusEl.className = 'status error';
+                resultsEl.innerHTML = `
+                    <div style="background-color: #f8d7da; padding: 10px; border-radius: 5px;">
+                        <strong>Upload Error:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-check server status on page load
+        window.onload = function() {
+            checkServerStatus();
+        };
+    </script>
+</body>
+</html>
