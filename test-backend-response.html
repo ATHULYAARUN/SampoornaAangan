@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Response Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            border-left: 4px solid #dc3545;
+        }
+        .warning {
+            border-left: 4px solid #ffc107;
+        }
+        .info {
+            border-left: 4px solid #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Backend Response Test</h1>
+        <p>This tool tests the backend server responses to debug the JSON parsing error.</p>
+
+        <div class="test-section">
+            <h3>1. Health Check Test</h3>
+            <button onclick="testHealthCheck()">Test Health Endpoint</button>
+            <div id="health-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Auth Endpoint Test</h3>
+            <button onclick="testAuthEndpoint()">Test Auth Login Endpoint</button>
+            <div id="auth-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Admin Login Test</h3>
+            <button onclick="testAdminLogin()">Test Admin Login</button>
+            <div id="admin-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Raw Response Test</h3>
+            <button onclick="testRawResponse()">Test Raw Response</button>
+            <div id="raw-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5005/api';
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = content;
+            element.style.display = 'block';
+        }
+
+        async function testHealthCheck() {
+            try {
+                showResult('health-result', 'Testing health endpoint...', 'info');
+                
+                const response = await fetch('http://localhost:5005/health');
+                const contentType = response.headers.get('content-type');
+                
+                console.log('Health check response:', response);
+                console.log('Content-Type:', contentType);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('health-result', 
+                        `✅ Health Check Successful\n` +
+                        `Status: ${response.status}\n` +
+                        `Content-Type: ${contentType}\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}`, 
+                        'success'
+                    );
+                } else {
+                    showResult('health-result', 
+                        `❌ Health Check Failed\n` +
+                        `Status: ${response.status}\n` +
+                        `Status Text: ${response.statusText}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('health-result', 
+                    `❌ Health Check Error\n` +
+                    `Error: ${error.message}\n` +
+                    `Is the backend server running on port 5000?`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testAuthEndpoint() {
+            try {
+                showResult('auth-result', 'Testing auth login endpoint...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'testpassword',
+                        role: 'parent'
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                console.log('Auth response:', response);
+                console.log('Content-Type:', contentType);
+                
+                // Try to read as text first
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
+                let result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    contentType: contentType,
+                    responseText: responseText
+                };
+                
+                // Try to parse as JSON
+                try {
+                    if (responseText) {
+                        result.jsonData = JSON.parse(responseText);
+                    }
+                } catch (jsonError) {
+                    result.jsonParseError = jsonError.message;
+                }
+                
+                showResult('auth-result', 
+                    `📊 Auth Endpoint Response\n` +
+                    `Status: ${result.status}\n` +
+                    `Content-Type: ${result.contentType}\n` +
+                    `Response Text: ${result.responseText}\n` +
+                    `JSON Parse Error: ${result.jsonParseError || 'None'}\n` +
+                    `Parsed Data: ${result.jsonData ? JSON.stringify(result.jsonData, null, 2) : 'None'}`, 
+                    result.jsonParseError ? 'error' : 'success'
+                );
+                
+            } catch (error) {
+                showResult('auth-result', 
+                    `❌ Auth Endpoint Error\n` +
+                    `Error: ${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testAdminLogin() {
+            try {
+                showResult('admin-result', 'Testing admin login...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        identifier: 'admin@sampoornaangan.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const contentType = response.headers.get('content-type');
+                console.log('Admin response:', response);
+                
+                // Try to read as text first
+                const responseText = await response.text();
+                console.log('Admin response text:', responseText);
+                
+                let result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    contentType: contentType,
+                    responseText: responseText
+                };
+                
+                // Try to parse as JSON
+                try {
+                    if (responseText) {
+                        result.jsonData = JSON.parse(responseText);
+                    }
+                } catch (jsonError) {
+                    result.jsonParseError = jsonError.message;
+                }
+                
+                showResult('admin-result', 
+                    `📊 Admin Login Response\n` +
+                    `Status: ${result.status}\n` +
+                    `Content-Type: ${result.contentType}\n` +
+                    `Response Text: ${result.responseText}\n` +
+                    `JSON Parse Error: ${result.jsonParseError || 'None'}\n` +
+                    `Parsed Data: ${result.jsonData ? JSON.stringify(result.jsonData, null, 2) : 'None'}`, 
+                    result.jsonParseError ? 'error' : 'success'
+                );
+                
+            } catch (error) {
+                showResult('admin-result', 
+                    `❌ Admin Login Error\n` +
+                    `Error: ${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        async function testRawResponse() {
+            try {
+                showResult('raw-result', 'Testing raw response...', 'info');
+                
+                // Test with XMLHttpRequest for more detailed debugging
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `${API_BASE_URL}/auth/login`, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        const result = {
+                            readyState: xhr.readyState,
+                            status: xhr.status,
+                            statusText: xhr.statusText,
+                            responseText: xhr.responseText,
+                            responseURL: xhr.responseURL,
+                            getAllResponseHeaders: xhr.getAllResponseHeaders()
+                        };
+                        
+                        showResult('raw-result', 
+                            `📊 Raw XMLHttpRequest Response\n` +
+                            `Ready State: ${result.readyState}\n` +
+                            `Status: ${result.status}\n` +
+                            `Status Text: ${result.statusText}\n` +
+                            `Response URL: ${result.responseURL}\n` +
+                            `Headers: ${result.getAllResponseHeaders}\n` +
+                            `Response Text: ${result.responseText}`, 
+                            result.status === 0 ? 'error' : 'info'
+                        );
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    showResult('raw-result', 
+                        `❌ XMLHttpRequest Error\n` +
+                        `Network error or CORS issue\n` +
+                        `Status: ${xhr.status}`, 
+                        'error'
+                    );
+                };
+                
+                xhr.send(JSON.stringify({
+                    email: 'test@example.com',
+                    password: 'testpassword',
+                    role: 'parent'
+                }));
+                
+            } catch (error) {
+                showResult('raw-result', 
+                    `❌ Raw Response Error\n` +
+                    `Error: ${error.message}`, 
+                    'error'
+                );
+            }
+        }
+
+        // Auto-run health check on page load
+        window.onload = function() {
+            setTimeout(testHealthCheck, 1000);
+        };
+    </script>
+</body>
+</html>
