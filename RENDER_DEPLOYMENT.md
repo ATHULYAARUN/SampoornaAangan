@@ -1,7 +1,7 @@
 # Render Deployment Guide
 
 ## 🚀 Live URLs
-- **Frontend**: https://sampoornaaangan-forntend2.onrender.com
+- **Frontend**: https://sampoornaaangan-forntend3.onrender.com
 - **Backend**: https://sampoornaaangan-backend.onrender.com
 
 ## ⚙️ Required Environment Variables
@@ -66,7 +66,7 @@ If you add or change `VITE_API_URL` after deployment, you MUST manually redeploy
 #### CORS Errors
 **Cause**: Backend CORS not allowing frontend domain.
 
-**Fix**: Already configured in `backend/server.js` to allow `https://sampoornaaangan-forntend2.onrender.com`
+**Fix**: Already configured in `backend/server.js` to allow both `https://sampoornaaangan-forntend3.onrender.com` and `https://sampoornaaangan-forntend2.onrender.com`
 
 #### Backend Connection Issues
 1. Check backend logs in Render dashboard
@@ -86,7 +86,7 @@ iwr https://sampoornaaangan-backend.onrender.com/health -UseBasicParsing
 ```
 
 ### Frontend Testing
-1. Open: https://sampoornaaangan-forntend2.onrender.com/login
+1. Open: https://sampoornaaangan-forntend3.onrender.com/login
 2. Open Browser DevTools → Console
 3. Try to log in
 4. Check Network tab:
