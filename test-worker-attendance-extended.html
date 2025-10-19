@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Worker Attendance - Extended View</title>
+  <style>
+    body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:#f5f7fb;margin:0;padding:24px}
+    .wrap{max-width:1200px;margin:0 auto}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:14px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+    .child{border:1px solid #eef0f4;border-radius:10px;padding:14px}
+    .row{display:flex;gap:10px;align-items:center}
+    .name{font-weight:700;color:#111827}
+    .muted{color:#6b7280;font-size:.9rem}
+    .badge{padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;display:inline-block}
+    .b-present{background:#dcfce7;color:#166534}
+    .b-absent{background:#fee2e2;color:#991b1b}
+    .b-late{background:#fff7ed;color:#9a3412}
+    .controls{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    select,input[type=time],input[type=text]{border:1px solid #d1d5db;border-radius:6px;padding:6px 8px}
+    .btn{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:8px 10px;cursor:pointer}
+    .btn.secondary{background:#6b7280}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+    .chip{background:#f3f4f6;color:#374151;border-radius:9999px;padding:2px 8px;font-size:.75rem}
+    .k{font-weight:600;color:#374151}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h2>Anganwadi Worker • Daily Attendance (Extended)</h2>
+      <div>
+        <select id="worker-select"></select>
+        <button class="btn" id="load">Load</button>
+      </div>
+    </div>
+
+    <div id="stats" class="card muted">Select a worker to view children…</div>
+    <div id="children" class="grid"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5005/api/attendance-test';
+    const workerSelect = document.getElementById('worker-select');
+    const loadBtn = document.getElementById('load');
+    const statsEl = document.getElementById('stats');
+    const childrenEl = document.getElementById('children');
+    let currentWorkerEmail = null;
+
+    async function fetchWorkers(){
+      const r = await fetch(`${API_BASE}/test-workers`);
+      const j = await r.json();
+      if(!j.success) return;
+      workerSelect.innerHTML = j.data.map(w=>`<option value="${w.email}">${w.name} — ${w.anganwadiCenter}</option>`).join('');
+      currentWorkerEmail = j.data[0]?.email || null;
+    }
+
+    async function load(){
+      const workerEmail = workerSelect.value;
+      currentWorkerEmail = workerEmail;
+      const r = await fetch(`${API_BASE}/test-worker-attendance`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workerEmail})});
+      const j = await r.json();
+      if(!j.success){ statsEl.textContent = 'Failed to load.'; return; }
+      const d = j.data;
+      statsEl.innerHTML = `<div class="row"><div><div class="k">${d.worker.name} • ${d.worker.anganwadiCenter}</div><div class="muted">${d.date}</div></div><div class="chips"><span class="chip">Total ${d.statistics.total}</span><span class="chip">Present ${d.statistics.present}</span><span class="chip">Absent ${d.statistics.absent}</span><span class="chip">Late ${d.statistics.late}</span><span class="chip">Marked ${d.statistics.marked}</span></div></div>`;
+      childrenEl.innerHTML = d.children.map(c=>renderChildCard(c)).join('');
+    }
+
+    function renderChildCard(c){
+      const st = c.attendanceStatus;
+      const badgeClass = st==='present'?'b-present':st==='late'?'b-late':st==='absent'?'b-absent':' ';
+      const addr = c.address?`${c.address.village||''}, ${c.address.block||''}`.replace(/^[,\s]+|[,\s]+$/g,''):'';
+      return `<div class="child">
+        <div class="row" style="justify-content:space-between">
+          <div>
+            <div class="name">${c.name} <span class="muted">• ${c.gender}</span></div>
+            <div class="muted">Age: ${c.age} • Parent: ${c.parentName} (${c.relationToChild})</div>
+            <div class="muted">${addr}</div>
+          </div>
+          <div class="badge ${badgeClass}">${st.toUpperCase().replace('-', ' ')}</div>
+        </div>
+        <div class="chips">
+          ${c.bloodGroup?`<span class="chip">Blood ${c.bloodGroup}</span>`:''}
+          ${c.currentWeight?`<span class="chip">Wt ${c.currentWeight} kg</span>`:''}
+          ${c.currentHeight?`<span class="chip">Ht ${c.currentHeight} cm</span>`:''}
+          ${c.nutritionStatus?`<span class="chip">Nutrition: ${c.nutritionStatus}</span>`:''}
+          ${c.nutritionReceived?`<span class="chip">🍱 Nutrition</span>`:''}
+          ${c.healthCheckDone?`<span class="chip">🩺 Health</span>`:''}
+        </div>
+        <div class="controls">
+          <select id="st-${c._id}">
+            <option value="present" ${st==='present'?'selected':''}>Present</option>
+            <option value="absent" ${st==='absent'?'selected':''}>Absent</option>
+            <option value="late" ${st==='late'?'selected':''}>Late</option>
+          </select>
+          <input type="time" id="tm-${c._id}" value="${c.timeIn||''}" />
+          <label class="muted"><input type="checkbox" id="nu-${c._id}" ${c.nutritionReceived?'checked':''}/> Nutrition</label>
+          <label class="muted"><input type="checkbox" id="hc-${c._id}" ${c.healthCheckDone?'checked':''}/> Health</label>
+          <input type="text" id="nt-${c._id}" placeholder="Notes" value="${c.notes||''}" style="flex:1;min-width:160px"/>
+          <button class="btn" onclick="quickMark('${c._id}','present')">Mark Present</button>
+          <button class="btn secondary" onclick="quickMark('${c._id}','absent')">Mark Absent</button>
+          <button class="btn" onclick="mark('${c._id}')">Save</button>
+        </div>
+      </div>`;
+    }
+
+    async function quickMark(id,status){
+      document.getElementById(`st-${id}`).value=status;
+      await mark(id);
+    }
+
+    async function mark(childId){
+      const status = document.getElementById(`st-${childId}`).value;
+      const timeIn = document.getElementById(`tm-${childId}`).value;
+      const nutritionReceived = document.getElementById(`nu-${childId}`).checked;
+      const healthCheckDone = document.getElementById(`hc-${childId}`).checked;
+      const notes = document.getElementById(`nt-${childId}`).value;
+      await fetch(`${API_BASE}/test-mark-attendance`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workerEmail:currentWorkerEmail,childId,status,timeIn,nutritionReceived,healthCheckDone,notes})});
+      await load();
+    }
+
+    loadBtn.addEventListener('click', load);
+    fetchWorkers().then(()=>{ if(workerSelect.value) load(); });
+  </script>
+</body>
+</html>
