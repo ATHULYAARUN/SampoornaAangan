@@ -1,11 +1,7 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "forntend/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "forntend/dist" }
-    }
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
   ],
   "routes": [
     { "src": "/(.*)", "dest": "/index.html" }
